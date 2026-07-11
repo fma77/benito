@@ -127,17 +127,17 @@
   .btn.gold{background:linear-gradient(180deg,#f0d68f,var(--gold));
     border-color:var(--gold-deep);color:#4a3410;}
   .hint{text-align:center;font-style:italic;color:var(--ink-soft);font-size:13px;margin:8px auto 0;max-width:420px;}
-  /* botão flutuante da pista — fixo no topo, sempre alcançável com o teclado aberto */
-  .clue-fab{position:fixed;top:calc(8px + env(safe-area-inset-top));right:10px;z-index:35;
-    font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);
+  /* botão flutuante da pista — acompanha a palavra selecionada (posição via JS) */
+  .clue-fab{position:fixed;top:0;left:0;z-index:35;
+    font-family:inherit;font-size:14px;font-weight:700;color:var(--ink);
     background:linear-gradient(180deg,#efe4c8,#e2d0a8);
-    border:2px solid var(--line-strong);border-radius:24px;
-    padding:10px 16px;min-height:44px;cursor:pointer;
+    border:2px solid var(--line-strong);border-radius:22px;
+    padding:8px 13px;min-height:40px;cursor:pointer;white-space:nowrap;
     box-shadow:0 3px 9px rgba(50,32,15,.4);
-    opacity:0;transform:translateY(-10px) scale(.96);pointer-events:none;
-    transition:opacity .22s ease, transform .22s ease;}
-  .clue-fab.on{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
-  .clue-fab:active{transform:translateY(1px);}
+    opacity:0;transform:scale(.9);pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;}
+  .clue-fab.on{opacity:1;transform:scale(1);pointer-events:auto;}
+  .clue-fab:active{filter:brightness(.95);}
   footer{text-align:center;margin-top:26px;font-size:12px;font-style:italic;color:var(--ink-soft);}
   footer .restart{display:inline-block;margin-top:8px;font-size:12px;color:var(--line-strong);
     text-decoration:underline;cursor:pointer;background:none;border:0;font-family:inherit;}
@@ -219,6 +219,25 @@
   .scroll-card p{font-size:clamp(15px,4.2vw,18px);line-height:1.55;text-align:center;margin:.5em 0;}
   .scroll-card .email{font-weight:700;color:var(--gold-deep);word-break:break-all;font-size:clamp(15px,4.2vw,17px);}
   .scroll-card .btn.gold{display:block;width:100%;margin-top:18px;text-align:center;text-decoration:none;}
+
+  /* ---------- Desafio final (palavra das douradas) ---------- */
+  #challenge{background:rgba(8,5,3,.55);z-index:80;}
+  #challenge.peeking{opacity:0;pointer-events:none;}
+  .ch-row{display:flex;justify-content:center;gap:8px;margin:18px 0 14px;}
+  .ch-box{position:relative;width:clamp(38px,11vw,50px);height:clamp(46px,13vw,58px);
+    border-radius:8px;border:2px solid var(--line-strong);background:#f6efdd;
+    color:var(--ink);font-size:clamp(22px,7vw,30px);font-weight:700;
+    display:flex;align-items:center;justify-content:center;}
+  .ch-box .n{position:absolute;top:2px;left:4px;font-size:11px;font-weight:700;color:var(--gold-deep);line-height:1;}
+  .ch-box.cur{background:#f0d68f;box-shadow:inset 0 0 0 2px var(--gold-deep);}
+  .ch-box.ok{background:radial-gradient(circle at 50% 40%,var(--gold-glow),var(--gold));
+    border-color:var(--gold-deep);color:#4a3410;box-shadow:0 0 10px rgba(196,146,42,.7);}
+  .ch-row.shake{animation:shake .45s;}
+  .ch-msg{min-height:1.2em;color:var(--red);font-style:italic;font-size:14px;text-align:center;margin:.3em 0 0;}
+  #challengeCard .btn{display:block;margin:4px auto 0;}
+  #chPeekBack{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));
+    transform:translateX(-50%);z-index:85;display:none;}
+  #chPeekBack.on{display:block;}
 </style>
 
 <div class="wrap" id="app">
@@ -281,6 +300,18 @@
   </div>
 </div>
 
+<!-- Desafio final: escrever a palavra das células douradas -->
+<div class="overlay" id="challenge">
+  <div class="scroll-card" id="challengeCard">
+    <h2>⚓ Um último desafio</h2>
+    <p>Escreveste toda a grelha. Agora repara nas <b>seis células douradas</b>: pela ordem marcada, de <b>1 a 6</b>, as suas letras formam a palavra que abre o tesouro.</p>
+    <div class="ch-row" id="chRow"></div>
+    <button class="btn" id="chPeek">👁 Espreitar a grelha</button>
+    <p class="ch-msg" id="chMsg"></p>
+  </div>
+</div>
+<button class="btn" id="chPeekBack">↩ Voltar ao desafio</button>
+
 <!-- Despertar -->
 <div class="overlay" id="despertar">
   <div class="anchor">⚓</div>
@@ -309,8 +340,6 @@
 (function(){
   /* ============ CONFIG ============ */
   var SALT = "bsq-1830-brig-x7-";   // neutral hash salt (no answer words in it)
-  var LS_KEY = "benito_tesouro_v1";
-  var OBF = 0x5b; // obfuscation byte for stored letters (not plaintext)
   // Guardian email kept out of the source in clear (base64); shown only in State 3
   var GUARD = atob("YmVuaXRvLnNvdG8uYWJvYWwuMTgwNUBnbWFpbC5jb20=");
 
@@ -497,6 +526,7 @@
   }
 
   function onCellClick(e){
+    if(challengeActive) return;   // durante o desafio final a grelha é só leitura
     var r=+this.dataset.r, c=+this.dataset.c;
     var cell=cells[key(r,c)];
     if(cell.black) return;
@@ -526,8 +556,9 @@
     if(w.cells[idx].locked) idx = firstEmpty(w, 0);
     sel.idx = idx;
     render();
-    // selecionar NÃO mostra a pista — só revela o botão 💡 Pista
-    document.getElementById("clueBtn").classList.add("on");
+    // selecionar NÃO mostra a pista — só revela o botão 💡 Pista, junto à palavra
+    clueBtn.classList.add("on");
+    positionClueBtn();
     if(clueOpen) closeClue();
     if(focusKb && !w.solved){
       // focus hidden input to raise the mobile keyboard
@@ -583,15 +614,16 @@
   }
 
   hidden.addEventListener("keydown", function(e){
-    if(e.key==="Backspace"){ e.preventDefault(); backspace(); }
+    if(e.key==="Backspace"){ e.preventDefault(); if(challengeActive) chBack(); else backspace(); }
+    else if(e.key==="Enter"){ e.preventDefault(); hidden.blur(); }
+    else if(challengeActive){ /* setas ignoradas no desafio */ }
     else if(e.key==="ArrowRight"||e.key==="ArrowDown"){ e.preventDefault(); if(sel.word){ sel.idx=nextEditable(sel.word,sel.idx); render(); } }
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){ e.preventDefault(); if(sel.word){ sel.idx=prevEditable(sel.word,sel.idx); render(); } }
-    else if(e.key==="Enter"){ e.preventDefault(); hidden.blur(); }
   });
   hidden.addEventListener("input", function(e){
     var v=e.target.value;
     e.target.value="";
-    for(var i=0;i<v.length;i++){ typeChar(v[i]); }
+    for(var i=0;i<v.length;i++){ if(challengeActive) chType(v[i]); else typeChar(v[i]); }
   });
 
   /* ============ VALIDATION ============ */
@@ -660,7 +692,7 @@
     updateProgress();
     var solved=WORDS.filter(function(w){return w.solved;}).length;
     if(solved>=14) preloadVideo();
-    if(solved>=WORDS.length){ setTimeout(triggerDespertar, 700); }
+    if(solved>=WORDS.length){ setTimeout(startChallenge, 900); }
   }
 
   /* ============ RENDER ============ */
@@ -690,6 +722,27 @@
   var sheet=document.getElementById("sheet"), sheetBack=document.getElementById("sheetBack");
   var clueBtn=document.getElementById("clueBtn");
   var clueOpen=false;
+  // coloca o botão da pista acima e à direita da palavra selecionada
+  function positionClueBtn(){
+    if(!sel.word || !clueBtn.classList.contains("on")) return;
+    var rects=sel.word.cells.map(function(c){return c.el.getBoundingClientRect();});
+    var top=Math.min.apply(null, rects.map(function(r){return r.top;}));
+    var right=Math.max.apply(null, rects.map(function(r){return r.right;}));
+    var bw=clueBtn.offsetWidth||90, bh=clueBtn.offsetHeight||40;
+    var m=6;
+    var left=right - bw + 10;          // alinhado à direita da palavra, um pouco além
+    var t=top - bh - 6;                // um pouco acima da palavra
+    left=Math.max(m, Math.min(left, window.innerWidth - bw - m));
+    if(t<m) t=Math.max(m, top + 4);    // sem espaço acima → junto ao topo da palavra
+    clueBtn.style.left=left+"px";
+    clueBtn.style.top=t+"px";
+  }
+  window.addEventListener("scroll", positionClueBtn, {passive:true});
+  window.addEventListener("resize", positionClueBtn);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", positionClueBtn);
+    window.visualViewport.addEventListener("scroll", positionClueBtn);
+  }
   function refocusKb(){
     if(sel.word && !sel.word.solved){ try{ hidden.focus({preventScroll:true}); }catch(e){ hidden.focus(); } }
   }
@@ -792,13 +845,84 @@
     }).catch(function(){ videoBusy=false; /* fall back to direct src */ });
   }
 
+  /* ============ DESAFIO FINAL (escrever a palavra das douradas) ============ */
+  var challengeActive=false, chLetters=["","","","","",""], chIdx=0, chBusy=false;
+  var challenge=document.getElementById("challenge");
+  var challengeCard=document.getElementById("challengeCard");
+  var chRow=document.getElementById("chRow");
+  var chMsg=document.getElementById("chMsg");
+  var chPeekBack=document.getElementById("chPeekBack");
+  (function buildChBoxes(){
+    for(var i=0;i<6;i++){
+      var b=document.createElement("div"); b.className="ch-box";
+      var n=document.createElement("span"); n.className="n"; n.textContent=(i+1); b.appendChild(n);
+      var lt=document.createElement("span"); lt.className="chlt"; b.appendChild(lt);
+      chRow.appendChild(b);
+    }
+  })();
+  function chBox(i){ return chRow.children[i]; }
+  function renderCh(){ for(var i=0;i<6;i++){ chBox(i).classList.toggle("cur", challengeActive && i===chIdx); } }
+  function chFocus(){ if(challengeActive){ try{ hidden.focus({preventScroll:true}); }catch(e){ hidden.focus(); } } }
+  function startChallenge(){
+    closeClue(); clueBtn.classList.remove("on");
+    challengeActive=true; chLetters=["","","","","",""]; chIdx=0; chBusy=false;
+    for(var i=0;i<6;i++){ chBox(i).querySelector(".chlt").textContent=""; chBox(i).classList.remove("ok"); }
+    chMsg.textContent="";
+    challenge.classList.remove("peeking"); chPeekBack.classList.remove("on");
+    challenge.classList.add("on"); challengeCard.classList.add("show");
+    renderCh();
+  }
+  chRow.addEventListener("click", chFocus);
+  function chType(ch){
+    if(!challengeActive || chBusy) return;
+    var n=norm(ch); if(n.length!==1) return;
+    if(chIdx>=6) return;
+    chMsg.textContent="";
+    chLetters[chIdx]=n; chBox(chIdx).querySelector(".chlt").textContent=n;
+    chIdx=Math.min(chIdx+1,6);
+    renderCh();
+    if(chLetters.every(function(x){return x;})) chCheck();
+  }
+  function chBack(){
+    if(!challengeActive || chBusy) return;
+    chMsg.textContent="";
+    if(chLetters[chIdx]){ chLetters[chIdx]=""; chBox(chIdx).querySelector(".chlt").textContent=""; }
+    else if(chIdx>0){ chIdx--; chLetters[chIdx]=""; chBox(chIdx).querySelector(".chlt").textContent=""; }
+    renderCh();
+  }
+  function chCheck(){
+    var typed=chLetters.join("");
+    var answer=keywordFromGold().join("");   // runtime, das células douradas — nunca em claro
+    if(typed===answer){
+      chBusy=true; challengeActive=false;
+      for(var i=0;i<6;i++){ (function(el,k){ setTimeout(function(){ el.classList.add("ok"); }, k*90); })(chBox(i),i); }
+      renderCh(); hidden.blur();
+      setTimeout(function(){ challenge.classList.remove("on"); triggerDespertar(); }, 1100);
+    }else{
+      chBusy=true;
+      chRow.classList.add("shake");
+      chMsg.textContent="Ainda não. Olha bem para as letras douradas.";
+      setTimeout(function(){
+        chRow.classList.remove("shake");
+        chLetters=["","","","","",""]; chIdx=0;
+        for(var i=0;i<6;i++) chBox(i).querySelector(".chlt").textContent="";
+        chBusy=false; renderCh(); chFocus();
+      },600);
+    }
+  }
+  document.getElementById("chPeek").addEventListener("click", function(){
+    challenge.classList.add("peeking"); chPeekBack.classList.add("on"); hidden.blur();
+  });
+  chPeekBack.addEventListener("click", function(){
+    challenge.classList.remove("peeking"); chPeekBack.classList.remove("on"); chFocus();
+  });
+
   /* ============ STATE 2: DESPERTAR ============ */
   var despertar=document.getElementById("despertar");
   var videoStage=document.getElementById("videoStage");
   function triggerDespertar(){
     closeClue();
     clueBtn.classList.remove("on");
-    saveCompleted();
     despertar.classList.add("on");
   }
   despertar.addEventListener("click", function(){
@@ -850,80 +974,16 @@
     },80);
   }
 
-  /* ============ PERSISTENCE (obfuscated letters + flags) ============ */
-  function obf(str){
-    var out=""; for(var i=0;i<str.length;i++){ out+=String.fromCharCode(str.charCodeAt(i)^OBF); }
-    return btoa(out);
-  }
-  function deobf(b64){
-    try{ var s=atob(b64), out=""; for(var i=0;i<s.length;i++){ out+=String.fromCharCode(s.charCodeAt(i)^OBF); } return out; }
-    catch(e){ return ""; }
-  }
-  function save(){
-    var payload={v:1, solved:[], cells:[], done:false};
-    // store solved words by index only (a flag, never the answer word)
-    WORDS.forEach(function(w,i){ if(w.solved) payload.solved.push(i); });
-    // store only letters already entered, obfuscated (no plaintext, no unsolved answers)
-    var letters="";
-    Object.keys(cells).forEach(function(k){
-      var cell=cells[k];
-      if(!cell.black && cell.letter){ payload.cells.push(cell.r+"."+cell.c); letters+=cell.letter; }
-    });
-    payload.blob=obf(letters);
-    try{ localStorage.setItem(LS_KEY, JSON.stringify(payload)); }catch(e){}
-  }
-  function saveCompleted(){
-    try{
-      var raw=localStorage.getItem(LS_KEY); var p=raw?JSON.parse(raw):{v:1};
-      p.done=true; localStorage.setItem(LS_KEY, JSON.stringify(p));
-    }catch(e){}
-  }
-  function load(){
-    var raw; try{ raw=localStorage.getItem(LS_KEY); }catch(e){ return null; }
-    if(!raw) return null;
-    try{ return JSON.parse(raw); }catch(e){ return null; }
-  }
+  /* ============ SEM PERSISTÊNCIA ============ */
+  // Por decisão do jogo, nada é guardado: cada refresh recomeça do zero.
+  function save(){ /* no-op */ }
 
-  function restore(state){
-    if(!state) return;
-    // restore letters
-    if(state.cells && state.blob){
-      var letters=deobf(state.blob);
-      for(var i=0;i<state.cells.length;i++){
-        var parts=state.cells[i].split("."); var cell=cells[key(+parts[0],+parts[1])];
-        if(cell && letters[i]){ cell.letter=letters[i]; paintCell(cell); }
-      }
-    }
-    // restore solved words (lock + gold)
-    if(state.solved){
-      state.solved.forEach(function(i){
-        var w=WORDS[i]; if(!w) return; w.solved=true;
-        w.cells.forEach(function(cell){
-          cell.locked=true; cell.el.classList.add("locked");
-          if(cell.gold) cell.el.classList.add("lit");
-        });
-      });
-    }
-    updateProgress();
-    var solved=WORDS.filter(function(w){return w.solved;}).length;
-    if(solved>=14) preloadVideo();
-    if(state.done || solved>=WORDS.length){
-      // go straight to State 3
-      resgateShown=false;
-      triggerResgate();
-    }
-  }
-
-  /* ============ RESTART ============ */
+  /* ============ RECOMEÇAR ============ */
   document.getElementById("restart").addEventListener("click", function(){
-    if(confirm("Recomeçar do zero? Vais perder o progresso.")){
-      try{ localStorage.removeItem(LS_KEY); }catch(e){}
-      location.reload();
-    }
+    if(confirm("Recomeçar do zero?")){ location.reload(); }
   });
 
   /* ============ INIT ============ */
   updateProgress();
-  restore(load());
 })();
 </script>
