@@ -1,0 +1,10 @@
+# vídeo original (13 MB) — só publicamos o comprimido a1831.mp4
+videos/
+
+# dependências / temporários
+node_modules/
+
+# ficheiros de SO
+.DS_Store
+Thumbs.db
+desktop.ini

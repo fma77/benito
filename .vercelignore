@@ -1,0 +1,4 @@
+# não enviar para o Vercel:
+videos/            # vídeo original de 13 MB (usar apenas o comprimido a1831.mp4)
+.claude/           # config de desenvolvimento
+node_modules/
