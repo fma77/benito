@@ -127,6 +127,17 @@
   .btn.gold{background:linear-gradient(180deg,#f0d68f,var(--gold));
     border-color:var(--gold-deep);color:#4a3410;}
   .hint{text-align:center;font-style:italic;color:var(--ink-soft);font-size:13px;margin:8px auto 0;max-width:420px;}
+  /* botão flutuante da pista — fixo no topo, sempre alcançável com o teclado aberto */
+  .clue-fab{position:fixed;top:calc(8px + env(safe-area-inset-top));right:10px;z-index:35;
+    font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);
+    background:linear-gradient(180deg,#efe4c8,#e2d0a8);
+    border:2px solid var(--line-strong);border-radius:24px;
+    padding:10px 16px;min-height:44px;cursor:pointer;
+    box-shadow:0 3px 9px rgba(50,32,15,.4);
+    opacity:0;transform:translateY(-10px) scale(.96);pointer-events:none;
+    transition:opacity .22s ease, transform .22s ease;}
+  .clue-fab.on{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+  .clue-fab:active{transform:translateY(1px);}
   footer{text-align:center;margin-top:26px;font-size:12px;font-style:italic;color:var(--ink-soft);}
   footer .restart{display:inline-block;margin-top:8px;font-size:12px;color:var(--line-strong);
     text-decoration:underline;cursor:pointer;background:none;border:0;font-family:inherit;}
@@ -231,7 +242,7 @@
   <div class="actions">
     <button class="btn" id="openCarta">📜 Ler a carta</button>
   </div>
-  <p class="hint">Toca numa palavra da grelha para ler o parágrafo da carta. Toca duas vezes numa célula para trocar entre horizontal e vertical.</p>
+  <p class="hint">Toca numa palavra e escreve com o teclado. Toca duas vezes numa célula para trocar entre horizontal e vertical. Precisas de ajuda? Toca em <b>💡 Pista</b>.</p>
 
   <footer>
     Impresso em Pontevedra · Casa das Campás · Registo nº 1831
@@ -241,6 +252,9 @@
 
 <input id="hiddenInput" type="text" inputmode="text" autocomplete="off"
        autocorrect="off" autocapitalize="characters" spellcheck="false" aria-hidden="true">
+
+<!-- Botão flutuante da pista (aparece quando há palavra selecionada) -->
+<button class="clue-fab" id="clueBtn" aria-label="Ler a pista desta palavra">💡 Pista</button>
 
 <!-- Clue sheet -->
 <div class="sheet-back" id="sheetBack"></div>
@@ -512,7 +526,9 @@
     if(w.cells[idx].locked) idx = firstEmpty(w, 0);
     sel.idx = idx;
     render();
-    openClue(w);
+    // selecionar NÃO mostra a pista — só revela o botão 💡 Pista
+    document.getElementById("clueBtn").classList.add("on");
+    if(clueOpen) closeClue();
     if(focusKb && !w.solved){
       // focus hidden input to raise the mobile keyboard
       try{ hidden.focus({preventScroll:true}); }catch(e){ hidden.focus(); }
@@ -537,6 +553,7 @@
   }
 
   function typeChar(ch){
+    if(clueOpen) return;                 // escrita bloqueada com a pista aberta
     var n=norm(ch);
     if(n.length!==1) return;
     if(!sel.word || sel.word.solved) return;
@@ -550,6 +567,7 @@
     save();
   }
   function backspace(){
+    if(clueOpen) return;
     if(!sel.word || sel.word.solved) return;
     var cell=sel.word.cells[sel.idx];
     if(cell.locked) return;
@@ -668,14 +686,28 @@
     document.getElementById("pfill").style.width=(n/WORDS.length*100)+"%";
   }
 
-  /* ============ CLUE SHEET ============ */
+  /* ============ CLUE SHEET (só a pedido; bloqueia a escrita) ============ */
   var sheet=document.getElementById("sheet"), sheetBack=document.getElementById("sheetBack");
+  var clueBtn=document.getElementById("clueBtn");
+  var clueOpen=false;
+  function refocusKb(){
+    if(sel.word && !sel.word.solved){ try{ hidden.focus({preventScroll:true}); }catch(e){ hidden.focus(); } }
+  }
   function openClue(w){
+    if(!w) return;
     document.getElementById("clueNum").textContent="Parágrafo "+w.clue;
     document.getElementById("clueText").textContent=CLUES[w.clue];
     sheet.classList.add("on"); sheetBack.classList.add("on");
+    clueOpen=true;
+    hidden.blur();          // fecha o teclado: não se escreve com a pista aberta
   }
-  function closeClue(){ sheet.classList.remove("on"); sheetBack.classList.remove("on"); }
+  function closeClue(){
+    if(!clueOpen && !sheet.classList.contains("on")) return;
+    sheet.classList.remove("on"); sheetBack.classList.remove("on");
+    clueOpen=false;
+    refocusKb();            // volta a ativar o teclado para continuar a escrever
+  }
+  clueBtn.addEventListener("click", function(){ if(sel.word) openClue(sel.word); });
   document.getElementById("sheetClose").addEventListener("click", closeClue);
   sheetBack.addEventListener("click", closeClue);
 
@@ -765,6 +797,7 @@
   var videoStage=document.getElementById("videoStage");
   function triggerDespertar(){
     closeClue();
+    clueBtn.classList.remove("on");
     saveCompleted();
     despertar.classList.add("on");
   }
