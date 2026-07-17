@@ -142,40 +142,6 @@
   footer .restart{display:inline-block;margin-top:8px;font-size:12px;color:var(--line-strong);
     text-decoration:underline;cursor:pointer;background:none;border:0;font-family:inherit;}
 
-  /* ---------- Clue panel (bottom sheet) ---------- */
-  .sheet-back{position:fixed;inset:0;background:rgba(30,20,12,.5);z-index:40;
-    opacity:0;pointer-events:none;transition:opacity .28s;}
-  .sheet-back.on{opacity:1;pointer-events:auto;}
-  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;
-    background:var(--paper);border-top:3px solid var(--line-strong);
-    border-radius:18px 18px 0 0;box-shadow:0 -6px 22px rgba(30,20,10,.4);
-    transform:translateY(102%);transition:transform .32s cubic-bezier(.2,.8,.2,1);
-    max-width:680px;margin:0 auto;padding:16px 20px calc(20px + env(safe-area-inset-bottom));}
-  .sheet.on{transform:translateY(0);}
-  .sheet .grip{width:44px;height:5px;border-radius:3px;background:var(--line);margin:2px auto 12px;}
-  .sheet .clue-num{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-deep);
-    font-style:normal;font-weight:700;margin-bottom:6px;}
-  .sheet .clue-text{font-size:clamp(17px,4.6vw,21px);line-height:1.55;font-style:italic;
-    color:var(--ink);}
-  .sheet .clue-foot{margin-top:14px;font-size:12px;color:var(--ink-soft);font-style:italic;text-align:right;}
-  .sheet .close{position:absolute;top:12px;right:16px;font-size:22px;color:var(--ink-soft);
-    background:none;border:0;cursor:pointer;line-height:1;}
-
-  /* ---------- Carta viewer ---------- */
-  .carta{position:fixed;inset:0;z-index:60;background:rgba(24,16,10,.94);
-    display:none;flex-direction:column;}
-  .carta.on{display:flex;}
-  .carta-stage{flex:1;overflow:hidden;position:relative;touch-action:none;
-    display:flex;align-items:center;justify-content:center;}
-  .carta-stage img{max-width:100%;max-height:100%;transform-origin:0 0;
-    will-change:transform;user-select:none;-webkit-user-drag:none;
-    box-shadow:0 6px 30px rgba(0,0,0,.6);}
-  .carta-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;
-    padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(20,12,6,.6);}
-  .carta-bar .nav{display:flex;gap:8px;}
-  .carta-pg{color:#e9dcc0;font-style:italic;font-size:14px;align-self:center;}
-  .carta .btn{font-size:15px;padding:9px 14px;min-height:44px;}
-
   /* ---------- Overlays (despertar / resgate) ---------- */
   .overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
     text-align:center;flex-direction:column;padding:24px;}
@@ -258,10 +224,7 @@
     <div class="grid" id="grid" role="grid" aria-label="Palavras cruzadas"></div>
   </div>
 
-  <div class="actions">
-    <button class="btn" id="openCarta">📜 Ler a carta</button>
-  </div>
-  <p class="hint">Toca numa palavra e escreve com o teclado. Toca duas vezes numa célula para trocar entre horizontal e vertical. Precisas de ajuda? Toca em <b>💡 Pista</b>.</p>
+  <p class="hint">Toca numa palavra e escreve com o teclado. Toca duas vezes numa célula para trocar entre horizontal e vertical.</p>
 
   <footer>
     Impresso em Pontevedra · Casa das Campás · Registo nº 1831
@@ -271,34 +234,6 @@
 
 <input id="hiddenInput" type="text" inputmode="text" autocomplete="off"
        autocorrect="off" autocapitalize="characters" spellcheck="false" aria-hidden="true">
-
-<!-- Botão flutuante da pista (aparece quando há palavra selecionada) -->
-<button class="clue-fab" id="clueBtn" aria-label="Ler a pista desta palavra">💡 Pista</button>
-
-<!-- Clue sheet -->
-<div class="sheet-back" id="sheetBack"></div>
-<div class="sheet" id="sheet">
-  <div class="grip"></div>
-  <button class="close" id="sheetClose" aria-label="Fechar">✕</button>
-  <div class="clue-num" id="clueNum"></div>
-  <div class="clue-text" id="clueText"></div>
-  <div class="clue-foot">— do punho de Benito Soto</div>
-</div>
-
-<!-- Carta viewer -->
-<div class="carta" id="carta">
-  <div class="carta-stage" id="cartaStage">
-    <img id="cartaImg" src="carta1.png" alt="Página da carta">
-  </div>
-  <div class="carta-bar">
-    <button class="btn" id="cartaClose">✕ Fechar</button>
-    <span class="carta-pg" id="cartaPg">Página 1 de 2</span>
-    <div class="nav">
-      <button class="btn" id="cartaPrev">‹</button>
-      <button class="btn" id="cartaNext">›</button>
-    </div>
-  </div>
-</div>
 
 <!-- Desafio final: escrever a palavra das células douradas -->
 <div class="overlay" id="challenge">
@@ -404,31 +339,6 @@
     19:"313010963991d794364e5fb24f9ea7eb15d23032aef389ce22df7b404c3d33bb",
     20:"46a29c6d9d5c0d0b43414e0934926528b297a1c47c85ee75c44d9cd4d66a82f3",
     21:"9e08d5176568da4f566d8c8ba9fc91e129a743c01952e25641fe81094a9992c5"
-  };
-
-  /* ============ CLUES (the letter — plaintext is fine) ============ */
-  var CLUES = {
-    1:"Chamaram-me ladrão dos mares, lobo sem bandeira, filho do demónio. Eu prefiro a palavra antiga — a que se dá aos homens que tomam pela força o que o mar não dá por vontade.",
-    2:"Soto me chamam todos, mas guardo comigo o nome de minha mãe, que poucos conhecem.",
-    3:"Nasci numa cidade de pontes velhas, onde o rio Lérez entrega as suas águas à ría. As suas ruas de pedra ensinaram-me a andar; os seus cais ensinaram-me a partir.",
-    4:"Ao meu brigue roubado dei um nome duplo, para rir dos que me perseguiam. A primeira metade é uma troça, um engano, uma zombaria feita nome.",
-    5:"A segunda metade é a cor da noite sem lua, a cor da bandeira que os homens temem, a cor do fundo do mar onde dormem os náufragos.",
-    6:"Há uma aldeia pequena, de casas brancas e redes ao sol, na margem norte da minha ría. Ali hei-de tocar terra uma última vez, quando já for perigoso ter o meu nome.",
-    7:"E digo mais, ainda que não saiba porquê o digo: quem guardar este papel há-de ter o nome do santo bom de Novembro — aquele que cortou a capa ao meio para a repartir com um pobre.",
-    8:"Perto dessa aldeia há outra, onde os celeiros de pedra se debruçam sobre a água como velhos a olhar o mar. Não há no mundo lugar igual.",
-    9:"E que são esses celeiros senão casas de grão erguidas sobre pernas de pedra, para que o rato não suba e a humidade não entre?",
-    10:"Numa dessas casas de grão, na terceira perna do lado onde sopra o norte, deixei dormir uma coisa fria e pequena, de bronze, com um sino gravado.",
-    11:"E para que serve essa coisa? Para abrir o caminho ao que todos os homens procuram e nenhum achou. Aquilo por que me hão-de enforcar. Aquilo que vale mais escondido do que gasto.",
-    12:"Conheço as duas rías como conheço as linhas da minha mão. A do sul é mais funda e mais rica, e no seu fundo cresce uma cidade de pescadores que há-de ser grande — a maior deste reino.",
-    13:"À boca dessa ría do sul montam guarda umas ilhas bravas, dentes de pedra que o Atlântico não conseguiu engolir. As suas areias são as mais brancas que estes olhos viram.",
-    14:"E guardo ainda o nome de uma ilha solitária à boca da minha ría do norte, onde as grutas se enchem com a maré e o que lá entra não sai. Três letras apenas — as ilhas pequenas guardam os maiores segredos.",
-    15:"E há uma enseada escondida entre montes verdes, tão mansa e tão calada que parece um lago que fugiu do mar. Ali um barco dorme sem correntes.",
-    16:"Na minha ría do norte há uma praia comprida onde o oceano chega inteiro e com raiva. Nove ondas dessa praia resolvem muitos problemas.",
-    17:"Ao lado dela, uma terra que quase é ilha, presa ao mundo por um fio de areia. Os seus mariscos valem mais que prata — sei bem o que digo, que roubei muita.",
-    18:"Em rapaz joguei o jogo antigo da minha terra.",
-    19:"Eu era exímio no controlo daquele bastão.",
-    20:"E agora escutai o mais estranho: de quando em vez, sonho com um barco branco de dois cascos irmãos, unidos como gémeos, a navegar a minha ría sem medo. Procurai o seu nome, que ainda não existe.",
-    21:"E sonho com um dia em que o sol se há-de apagar em pleno dia sobre estas águas, como uma candeia soprada, e as gaivotas hão-de calar-se de espanto. Nesse dia, quem tiver este papel estará perto do fim do caminho."
   };
 
   /* ============ NORMALIZE + HASH ============ */
@@ -556,10 +466,6 @@
     if(w.cells[idx].locked) idx = firstEmpty(w, 0);
     sel.idx = idx;
     render();
-    // selecionar NÃO mostra a pista — só revela o botão 💡 Pista, junto à palavra
-    clueBtn.classList.add("on");
-    positionClueBtn();
-    if(clueOpen) closeClue();
     if(focusKb && !w.solved){
       // focus hidden input to raise the mobile keyboard
       try{ hidden.focus({preventScroll:true}); }catch(e){ hidden.focus(); }
@@ -584,7 +490,6 @@
   }
 
   function typeChar(ch){
-    if(clueOpen) return;                 // escrita bloqueada com a pista aberta
     var n=norm(ch);
     if(n.length!==1) return;
     if(!sel.word || sel.word.solved) return;
@@ -598,7 +503,6 @@
     save();
   }
   function backspace(){
-    if(clueOpen) return;
     if(!sel.word || sel.word.solved) return;
     var cell=sel.word.cells[sel.idx];
     if(cell.locked) return;
@@ -718,123 +622,6 @@
     document.getElementById("pfill").style.width=(n/WORDS.length*100)+"%";
   }
 
-  /* ============ CLUE SHEET (só a pedido; bloqueia a escrita) ============ */
-  var sheet=document.getElementById("sheet"), sheetBack=document.getElementById("sheetBack");
-  var clueBtn=document.getElementById("clueBtn");
-  var clueOpen=false;
-  // coloca o botão da pista acima e à direita da palavra selecionada
-  function positionClueBtn(){
-    if(!sel.word || !clueBtn.classList.contains("on")) return;
-    var rects=sel.word.cells.map(function(c){return c.el.getBoundingClientRect();});
-    var top=Math.min.apply(null, rects.map(function(r){return r.top;}));
-    var right=Math.max.apply(null, rects.map(function(r){return r.right;}));
-    var bw=clueBtn.offsetWidth||90, bh=clueBtn.offsetHeight||40;
-    var m=6;
-    var left=right - bw + 10;          // alinhado à direita da palavra, um pouco além
-    var t=top - bh - 6;                // um pouco acima da palavra
-    left=Math.max(m, Math.min(left, window.innerWidth - bw - m));
-    if(t<m) t=Math.max(m, top + 4);    // sem espaço acima → junto ao topo da palavra
-    clueBtn.style.left=left+"px";
-    clueBtn.style.top=t+"px";
-  }
-  window.addEventListener("scroll", positionClueBtn, {passive:true});
-  window.addEventListener("resize", positionClueBtn);
-  if(window.visualViewport){
-    window.visualViewport.addEventListener("resize", positionClueBtn);
-    window.visualViewport.addEventListener("scroll", positionClueBtn);
-  }
-  function refocusKb(){
-    if(sel.word && !sel.word.solved){ try{ hidden.focus({preventScroll:true}); }catch(e){ hidden.focus(); } }
-  }
-  function openClue(w){
-    if(!w) return;
-    document.getElementById("clueNum").textContent="Parágrafo "+w.clue;
-    document.getElementById("clueText").textContent=CLUES[w.clue];
-    sheet.classList.add("on"); sheetBack.classList.add("on");
-    clueOpen=true;
-    hidden.blur();          // fecha o teclado: não se escreve com a pista aberta
-  }
-  function closeClue(){
-    if(!clueOpen && !sheet.classList.contains("on")) return;
-    sheet.classList.remove("on"); sheetBack.classList.remove("on");
-    clueOpen=false;
-    refocusKb();            // volta a ativar o teclado para continuar a escrever
-  }
-  clueBtn.addEventListener("click", function(){ if(sel.word) openClue(sel.word); });
-  document.getElementById("sheetClose").addEventListener("click", closeClue);
-  sheetBack.addEventListener("click", closeClue);
-
-  /* ============ CARTA VIEWER (pan + pinch + double-tap zoom) ============ */
-  var carta=document.getElementById("carta"), cartaImg=document.getElementById("cartaImg"),
-      cartaStage=document.getElementById("cartaStage"), cartaPg=document.getElementById("cartaPg");
-  var pages=["carta1.png","carta2.png"], pg=0;
-  var zt={scale:1,x:0,y:0};
-  function applyZoom(){ cartaImg.style.transform="translate("+zt.x+"px,"+zt.y+"px) scale("+zt.scale+")"; }
-  function resetZoom(){ zt={scale:1,x:0,y:0}; applyZoom(); }
-  function showPage(i){
-    pg=(i+pages.length)%pages.length;
-    cartaImg.src=pages[pg];
-    cartaPg.textContent="Página "+(pg+1)+" de "+pages.length;
-    resetZoom();
-  }
-  document.getElementById("openCarta").addEventListener("click", function(){
-    carta.classList.add("on"); showPage(0);
-  });
-  document.getElementById("cartaClose").addEventListener("click", function(){ carta.classList.remove("on"); });
-  document.getElementById("cartaPrev").addEventListener("click", function(){ showPage(pg-1); });
-  document.getElementById("cartaNext").addEventListener("click", function(){ showPage(pg+1); });
-
-  // gestures
-  var pointers={}, startDist=0, startScale=1, startMid={x:0,y:0}, startPos={x:0,y:0}, dragging=false, dragStart=null;
-  function midOf(a,b){ return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; }
-  function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
-  cartaStage.addEventListener("pointerdown", function(e){
-    cartaStage.setPointerCapture(e.pointerId);
-    pointers[e.pointerId]={x:e.clientX,y:e.clientY};
-    var ids=Object.keys(pointers);
-    if(ids.length===2){
-      var p=ids.map(function(id){return pointers[id];});
-      startDist=dist(p[0],p[1]); startScale=zt.scale; startMid=midOf(p[0],p[1]);
-      startPos={x:zt.x,y:zt.y}; dragging=false;
-    }else if(ids.length===1){
-      dragging=true; dragStart={x:e.clientX,y:e.clientY, ox:zt.x, oy:zt.y};
-    }
-  });
-  cartaStage.addEventListener("pointermove", function(e){
-    if(!pointers[e.pointerId]) return;
-    pointers[e.pointerId]={x:e.clientX,y:e.clientY};
-    var ids=Object.keys(pointers);
-    if(ids.length===2){
-      var p=ids.map(function(id){return pointers[id];});
-      var d=dist(p[0],p[1]);
-      var ns=Math.min(4, Math.max(1, startScale*(d/startDist)));
-      zt.scale=ns;
-      zt.x=startPos.x; zt.y=startPos.y;
-      applyZoom();
-    }else if(ids.length===1 && dragging && zt.scale>1){
-      zt.x=dragStart.ox+(e.clientX-dragStart.x);
-      zt.y=dragStart.oy+(e.clientY-dragStart.y);
-      applyZoom();
-    }
-  });
-  function endPointer(e){
-    delete pointers[e.pointerId];
-    if(Object.keys(pointers).length<2) dragging=false;
-    if(zt.scale<=1.01){ resetZoom(); }
-  }
-  cartaStage.addEventListener("pointerup", endPointer);
-  cartaStage.addEventListener("pointercancel", endPointer);
-  // double-tap zoom
-  var lastImgTap=0;
-  cartaStage.addEventListener("click", function(e){
-    var now=Date.now();
-    if(now-lastImgTap<320){
-      if(zt.scale>1){ resetZoom(); }
-      else{ zt.scale=2.4; applyZoom(); }
-    }
-    lastImgTap=now;
-  });
-
   /* ============ VIDEO PRELOAD ============ */
   var videoReady=false, videoBusy=false, videoBlobUrl=null;
   var vid=document.getElementById("benitoVid");
@@ -864,7 +651,6 @@
   function renderCh(){ for(var i=0;i<6;i++){ chBox(i).classList.toggle("cur", challengeActive && i===chIdx); } }
   function chFocus(){ if(challengeActive){ try{ hidden.focus({preventScroll:true}); }catch(e){ hidden.focus(); } } }
   function startChallenge(){
-    closeClue(); clueBtn.classList.remove("on");
     challengeActive=true; chLetters=["","","","","",""]; chIdx=0; chBusy=false;
     for(var i=0;i<6;i++){ chBox(i).querySelector(".chlt").textContent=""; chBox(i).classList.remove("ok"); }
     chMsg.textContent="";
@@ -921,8 +707,6 @@
   var despertar=document.getElementById("despertar");
   var videoStage=document.getElementById("videoStage");
   function triggerDespertar(){
-    closeClue();
-    clueBtn.classList.remove("on");
     despertar.classList.add("on");
   }
   despertar.addEventListener("click", function(){

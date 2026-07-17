@@ -33,10 +33,12 @@ vercel --prod # produção
 ```
 
 ## Como funciona (para o guardião)
-- Grelha 14×14. O número na célula inicial de cada palavra é o **número do parágrafo** da carta (por isso aparecem "fora de ordem" — é intencional).
-- Tocar numa palavra abre o parágrafo correspondente; botão **📜 Ler a carta** abre o manuscrito.
-- Cada palavra certa "assenta" (fixa-se); as 6 células douradas acendem e soletram a palavra-chave **SOMBRA**.
-- Grelha completa → vídeo do Benito (com som) → pergaminho com a palavra-chave e o botão para enviar o e-mail ao guardião (`benito.soto.aboal.1805@gmail.com`, assunto `Resgate do Tesouro — SOMBRA`).
+- **Sem pistas no site** (versão difícil): não há botão de pista nem carta digital. As crianças usam a **carta impressa** (`carta1.png`/`carta2.png`, que ficam no repositório mas **não** são publicadas).
+- Grelha 14×14. O número na célula inicial de cada palavra é o **número do parágrafo** da carta impressa (por isso aparecem "fora de ordem" — é intencional).
+- Cada palavra certa "assenta" (fixa-se); as 6 células douradas acendem e soletram a palavra-chave.
+- Grelha completa → **desafio final**: escrever a palavra das 6 células douradas (1→6), com botão "👁 Espreitar a grelha".
+- Acertando → vídeo do Benito (com som) → pergaminho com o botão para enviar o e-mail ao guardião (`benito.soto.aboal.1805@gmail.com`, assunto `Resgate do Tesouro — …`).
+- **Sem persistência**: cada refresh recomeça do zero.
 
 ## Anti-batota
 - As respostas **não** estão no código: só existem os **SHA-256** (com sal) das palavras normalizadas.

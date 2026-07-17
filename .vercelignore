@@ -2,3 +2,7 @@
 videos/            # vídeo original de 13 MB (usar apenas o comprimido a1831.mp4)
 .claude/           # config de desenvolvimento
 node_modules/
+# a carta deixou de aparecer no site (os miúdos usam o papel impresso);
+# ficam no repositório como mestres para imprimir, mas não são publicados:
+carta1.png
+carta2.png
