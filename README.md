@@ -4,33 +4,20 @@ Caça ao tesouro digital de página única — o fecho do livro infantil sobre o
 
 ## Ficheiros
 ```
-index.html      → o site inteiro (grelha, pistas, estados, anti-batota)
+index.html      → o site inteiro (grelha, desafio final, estados, anti-batota)
 a1831.mp4        → vídeo do Benito, comprimido (~230 KB, nome não-óbvio de propósito)
-benito.png       → retrato a lápis (ABERTURA)      ⚠ substituir o placeholder
-carta1.png       → 1.ª página do manuscrito         ⚠ substituir o placeholder
-carta2.png       → 2.ª página do manuscrito         ⚠ substituir o placeholder
+benito.png       → retrato a lápis (cabeçalho)
+carta1.png       → 1.ª página do manuscrito (só para IMPRIMIR — não é publicada)
+carta2.png       → 2.ª página do manuscrito (só para IMPRIMIR — não é publicada)
 vercel.json      → cache longa para os media
-.vercelignore    → não envia o vídeo original (13 MB) nem ficheiros de dev
+.vercelignore    → exclui do deploy o vídeo original, a carta e ficheiros de dev
 videos/          → vídeo original (NÃO é publicado)
 ```
 
-## ⚠ Antes de publicar: substituir as 3 imagens
-`benito.png`, `carta1.png` e `carta2.png` são **placeholders** (blocos de cor).
-Copie por cima os ficheiros reais, **mantendo exactamente estes nomes**.
-
-## Publicar no Vercel
-Não precisa de build — é 100% estático.
-
-**Opção A — arrastar a pasta**
-1. https://vercel.com → *Add New… → Project → Deploy* (ou arrastar a pasta em *vercel.com/new*).
-2. Framework Preset: **Other**. Build Command: (vazio). Output: (vazio).
-
-**Opção B — CLI**
-```
-npm i -g vercel
-vercel        # pré-visualização
-vercel --prod # produção
-```
+## Publicar
+O repositório GitHub (`fma77/benito`) está ligado ao Vercel: **cada `git push`
+para `main` faz deploy automático**. Não precisa de build — é 100% estático
+(Framework Preset: *Other*, sem Build Command nem Output).
 
 ## Como funciona (para o guardião)
 - **Sem pistas no site** (versão difícil): não há botão de pista nem carta digital. As crianças usam a **carta impressa** (`carta1.png`/`carta2.png`, que ficam no repositório mas **não** são publicadas).
@@ -42,8 +29,9 @@ vercel --prod # produção
 
 ## Anti-batota
 - As respostas **não** estão no código: só existem os **SHA-256** (com sal) das palavras normalizadas.
-- A palavra-chave nunca aparece em claro — é derivada em runtime das células douradas.
-- `localStorage` guarda apenas *flags* (índices) e as letras já resolvidas ofuscadas — nunca respostas por resolver.
+- A palavra-chave nunca aparece em claro — é derivada em runtime das células douradas, e o desafio final valida contra elas.
+- Nada é guardado no browser (sem `localStorage`) — não há estado para inspecionar nem manipular.
+- A carta não é publicada no site — só existe em papel.
 - Normalização: maiúsculas, sem acentos e `Ñ→N` (MARTIÑO valida como MARTINO).
 - O vídeo tem um nome não-óbvio (`a1831.mp4`).
 
